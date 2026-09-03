@@ -16,7 +16,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-          cache: pip
       - name: Install test dependencies
         run: python -m pip install --upgrade pip pytest pyyaml
       - name: Compile Python
@@ -34,11 +33,9 @@ jobs:
         id: version
         shell: bash
         run: |
-          VERSION="$(python3 - <<'PY'
-          import yaml
-          print(yaml.safe_load(open('mojv_auth_helper/config.yaml', encoding='utf-8'))['version'])
-          PY
-          )"
+          set -euo pipefail
+          VERSION="$(awk -F': ' '$1 == "version" {gsub(/"/, "", $2); print $2}' mojv_auth_helper/config.yaml)"
+          test -n "$VERSION"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
@@ -55,28 +52,31 @@ jobs:
             BUILD_FROM=ghcr.io/home-assistant/base-python:3.13-alpine3.24
       - name: Start helper and verify health
         shell: bash
+        env:
+          EXPECTED_VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
           docker run -d --rm --name mojv-auth-helper-test -p 18099:8099 mojv-auth-helper:test
           cleanup() { docker logs mojv-auth-helper-test || true; docker stop mojv-auth-helper-test || true; }
           trap cleanup EXIT
+          rm -f /tmp/health.json
           for _ in $(seq 1 40); do
             if curl --fail --silent http://127.0.0.1:18099/health > /tmp/health.json; then
               break
             fi
             sleep 1
           done
+          test -s /tmp/health.json
           python3 - <<'PY'
           import json
-          import yaml
-          version = yaml.safe_load(open('mojv_auth_helper/config.yaml', encoding='utf-8'))['version']
+          import os
           health = json.load(open('/tmp/health.json', encoding='utf-8'))
-          assert health == {'status': 'ok', 'version': version}, health
+          assert health == {'status': 'ok', 'version': os.environ['EXPECTED_VERSION']}, health
           PY
           docker exec mojv-auth-helper-test pgrep Xvfb
           docker exec mojv-auth-helper-test chromium --version
           docker exec mojv-auth-helper-test chromedriver --version
-          docker logs mojv-auth-helper-test | grep -F "mojV Auth Helper version=${{ steps.version.outputs.version }}"
+          docker logs mojv-auth-helper-test 2>&1 | grep -F "mojV Auth Helper version=${EXPECTED_VERSION}"
       - name: Build aarch64 validation image
         uses: docker/build-push-action@v6
         with:
