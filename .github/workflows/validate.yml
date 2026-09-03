@@ -1,0 +1,89 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Python and repository contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest pyyaml
+      - name: Compile Python
+        run: python -m compileall -q mojv_auth_helper/rootfs/app
+      - name: Run tests
+        run: pytest -q
+
+  image:
+    name: Chromium/Xvfb image
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read helper version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(python3 - <<'PY'
+          import yaml
+          print(yaml.safe_load(open('mojv_auth_helper/config.yaml', encoding='utf-8'))['version'])
+          PY
+          )"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Build amd64 validation image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./mojv_auth_helper
+          load: true
+          platforms: linux/amd64
+          tags: mojv-auth-helper:test
+          build-args: |
+            BUILD_VERSION=${{ steps.version.outputs.version }}
+            BUILD_ARCH=amd64
+            BUILD_FROM=ghcr.io/home-assistant/base-python:3.13-alpine3.24
+      - name: Start helper and verify health
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --rm --name mojv-auth-helper-test -p 18099:8099 mojv-auth-helper:test
+          cleanup() { docker logs mojv-auth-helper-test || true; docker stop mojv-auth-helper-test || true; }
+          trap cleanup EXIT
+          for _ in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:18099/health > /tmp/health.json; then
+              break
+            fi
+            sleep 1
+          done
+          python3 - <<'PY'
+          import json
+          import yaml
+          version = yaml.safe_load(open('mojv_auth_helper/config.yaml', encoding='utf-8'))['version']
+          health = json.load(open('/tmp/health.json', encoding='utf-8'))
+          assert health == {'status': 'ok', 'version': version}, health
+          PY
+          docker exec mojv-auth-helper-test pgrep Xvfb
+          docker exec mojv-auth-helper-test chromium --version
+          docker exec mojv-auth-helper-test chromedriver --version
+          docker logs mojv-auth-helper-test | grep -F "mojV Auth Helper version=${{ steps.version.outputs.version }}"
+      - name: Build aarch64 validation image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./mojv_auth_helper
+          push: false
+          platforms: linux/arm64
+          build-args: |
+            BUILD_VERSION=${{ steps.version.outputs.version }}
+            BUILD_ARCH=aarch64
+            BUILD_FROM=ghcr.io/home-assistant/base-python:3.13-alpine3.24
