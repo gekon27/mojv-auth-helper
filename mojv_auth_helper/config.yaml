@@ -1,0 +1,16 @@
+name: mojV Auth Helper
+version: "0.1.7"
+slug: mojv_auth_helper
+description: Local Chromium authentication fallback for the mojV Home Assistant integration.
+url: https://github.com/gekon27/mojv-auth-helper
+arch:
+  - amd64
+  - aarch64
+image: ghcr.io/gekon27/mojv-auth-helper
+startup: application
+boot: auto
+init: false
+stage: experimental
+ingress: false
+options: {}
+schema: {}
