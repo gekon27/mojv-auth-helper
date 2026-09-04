@@ -58,5 +58,5 @@ def test_browser_fallback_enriches_schoolwork_before_public_snapshot() -> None:
     assert '"schoolwork_detail:' in source
     schoolwork_index = source.index('"SprawdzianyZadaniaDomowe"')
     public_index = source.index("base.public_snapshot_row(")
-    detail_index = source.index("merge_schoolwork_detail")
+    detail_index = source.index("merge_schoolwork_detail", schoolwork_index)
     assert schoolwork_index < detail_index < public_index
