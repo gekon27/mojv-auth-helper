@@ -37,10 +37,10 @@ def test_public_snapshot_row_carries_safe_expanded_modules_only() -> None:
         lucky_number={"numer": 20},
         free_days=[],
         excuses={"usprawiedliwieniaAktywne": True, "usprawiedliwienia": []},
-        teachers={"nauczyciele": []},
+        teachers={"nauczyciele": [{"imieNazwisko": "A. Teacher", "globalKeySkrzynka": "TEACHER_SECRET"}]},
         school_info={"nazwa": "Szkoła"},
         important_today=[],
-        homeroom_teachers=[{"imieNazwisko": "Jan Kowalski", "isGlowny": True}],
+        homeroom_teachers=[{"imieNazwisko": "Jan Kowalski", "isGlowny": True, "globalKeySkrzynka": "HOMEROOM_SECRET"}],
         completed_lessons=[],
         errors={},
     )
@@ -57,9 +57,15 @@ def test_public_snapshot_row_carries_safe_expanded_modules_only() -> None:
     ):
         assert key in row
     serialized = repr(row)
-    assert "SESSION_SECRET" not in serialized
-    assert "JOURNAL_SECRET" not in serialized
-    assert "MAILBOX_SECRET" not in serialized
+    for secret in (
+        "SESSION_SECRET",
+        "JOURNAL_SECRET",
+        "MAILBOX_SECRET",
+        "TEACHER_SECRET",
+        "HOMEROOM_SECRET",
+    ):
+        assert secret not in serialized
+    assert "globalKeySkrzynka" not in serialized
 
 
 def test_server_live_fetches_all_expanded_read_only_endpoints() -> None:
