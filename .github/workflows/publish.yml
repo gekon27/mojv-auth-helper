@@ -100,3 +100,5 @@ jobs:
           docker logout ghcr.io || true
           rm -f "$HOME/.docker/config.json"
           docker pull "${IMAGE}:${VERSION}"
+
+# Retrigger marker after granting standalone repository GHCR Actions access.
