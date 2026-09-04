@@ -29,9 +29,15 @@ def test_homework_and_exam_detail_endpoints_are_selected_by_type() -> None:
     assert module.detail_endpoint({"id": 5, "typ": 0}) is None
 
 
+def test_supported_schoolwork_still_needs_detail_when_list_has_preview() -> None:
+    module = _load_details()
+    assert module.needs_detail({"id": 101, "typ": 4, "opis": "Skrót z listy."}) is True
+    assert module.needs_detail({"id": 102, "typ": 1, "tresc": "Krótki podgląd."}) is True
+
+
 def test_detail_merge_keeps_homework_description_and_drops_private_fields() -> None:
     module = _load_details()
-    row = {"id": 101, "typ": 4, "przedmiotNazwa": "Matematyka"}
+    row = {"id": 101, "typ": 4, "przedmiotNazwa": "Matematyka", "opis": "Skrót z listy."}
     detail = {
         "id": 101,
         "typ": 4,
