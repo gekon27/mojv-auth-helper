@@ -1,5 +1,5 @@
 name: mojV Auth Helper
-version: "0.1.7"
+version: "0.1.8"
 slug: mojv_auth_helper
 description: Local Chromium authentication fallback for the mojV Home Assistant integration.
 url: https://github.com/gekon27/mojv-auth-helper

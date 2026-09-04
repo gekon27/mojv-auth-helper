@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / "mojv_auth_helper" / "rootfs" / "app" / "auth_runtime.py"
 SERVER = ROOT / "mojv_auth_helper" / "rootfs" / "app" / "server.py"
+LIVE_SERVER = ROOT / "mojv_auth_helper" / "rootfs" / "app" / "server_live.py"
 DOCKERFILE = ROOT / "mojv_auth_helper" / "Dockerfile"
 RUN_SCRIPT = ROOT / "mojv_auth_helper" / "rootfs" / "etc" / "services.d" / "mojv-auth" / "run"
 
@@ -40,6 +41,7 @@ def test_context_rows_become_internal_targets_without_secret_in_public_row() -> 
                     "uczen": "Jan Kowalski",
                     "oddzial": "5A",
                     "key": "SECRET-KEY",
+                    "globalKeySkrzynka": "MAILBOX-SECRET",
                 }
             ]
         },
@@ -48,6 +50,7 @@ def test_context_rows_become_internal_targets_without_secret_in_public_row() -> 
     target = targets[0]
     assert target.session_key == "SECRET-KEY"
     assert target.journal_id == "99"
+    assert target.mailbox_key == "MAILBOX-SECRET"
     assert target.public_dict() == {
         "student_id": "12",
         "name": "Jan Kowalski",
@@ -68,14 +71,23 @@ def test_snapshot_student_never_contains_browser_or_session_secrets() -> None:
         app_url="https://uczen.example/gryfino/App/abc/tablica",
         session_key="SECRET",
         journal_id="99",
+        mailbox_key="MAILBOX-SECRET",
     )
     row = runtime.public_snapshot_row(
         target,
         timetable=[],
         attendance=[],
+        attendance_subjects=[],
+        attendance_summary={},
+        attendance_by_subject={},
         classification_periods=[{"id": 1, "numerOkresu": 1}],
         grades_by_period={"1": {"ocenyPrzedmioty": []}},
+        remarks=[],
         schoolwork=[{"id": 7, "typ": 4}],
+        messages=[],
+        message_details={},
+        achievements=[],
+        meetings=[],
         errors={},
     )
     assert set(row) == {
@@ -84,15 +96,24 @@ def test_snapshot_student_never_contains_browser_or_session_secrets() -> None:
         "class_name",
         "timetable",
         "attendance",
+        "attendance_subjects",
+        "attendance_summary",
+        "attendance_by_subject",
         "classification_periods",
         "grades_by_period",
+        "remarks",
         "schoolwork",
+        "messages",
+        "message_details",
+        "achievements",
+        "meetings",
         "errors",
     }
     public = str(row)
     assert "SECRET" not in public
     assert "'journal_id'" not in public
     assert "'session_key'" not in public
+    assert "'mailbox_key'" not in public
 
 
 def test_browser_cache_key_is_bound_to_both_username_and_password() -> None:
@@ -117,6 +138,7 @@ def test_browser_runs_inside_xvfb_with_classic_headless_mode() -> None:
     assert 'xvfb' in dockerfile
     assert 'Xvfb' in run_script
     assert 'DISPLAY=' in run_script
+    assert 'server_live.py' in run_script
 
 
 def test_helper_logs_safe_auth_stages_and_redacted_screenshot() -> None:
@@ -154,9 +176,29 @@ def test_diary_link_renderer_timeout_is_recovered_per_link() -> None:
 
 
 def test_helper_snapshot_fetches_extended_live_modules() -> None:
-    server = SERVER.read_text(encoding="utf-8")
+    server = SERVER.read_text(encoding="utf-8") + LIVE_SERVER.read_text(encoding="utf-8")
 
-    assert "zakresDanych" in server
-    assert "SprawdzianyZadaniaDomowe" in server
-    assert "OkresyKlasyfikacyjne" in server
-    assert "Oceny" in server
+    for marker in (
+        "zakresDanych",
+        "SprawdzianyZadaniaDomowe",
+        "OkresyKlasyfikacyjne",
+        "Oceny",
+        "Przedmioty",
+        "FrekwencjaStatystyki",
+        "Uwagi",
+        "Osiagniecia",
+        "Zebrania",
+        "OdebraneSkrzynka",
+        "WiadomoscSzczegoly",
+    ):
+        assert marker in server
+
+
+def test_message_routing_ids_are_sanitized_before_public_snapshot() -> None:
+    live = LIVE_SERVER.read_text(encoding="utf-8")
+
+    assert "_public_message_id" in live
+    assert "hashlib.sha256" in live
+    assert '"apiglobalkey"' in live.lower()
+    assert '"globalkeyskrzynka"' in live.lower()
+    assert "target.mailbox_key" in live

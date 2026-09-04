@@ -9,11 +9,11 @@ Jego zadania to:
 - uruchomić lokalny Chromium, gdy portal szkolny wymaga pełnej przeglądarki,
 - utrzymać sesję przeglądarkową wyłącznie wewnątrz kontenera,
 - wykrywać 1..N dzieci bez założenia stałej liczby kont ucznia,
-- zwrócić integracji mojV wyłącznie publiczne dane uczniów: plan, frekwencję, okresy klasyfikacyjne, oceny i terminarz/prace szkolne.
+- zwrócić integracji mojV wyłącznie publiczne dane uczniów: plan, frekwencję i statystyki, okresy klasyfikacyjne, oceny, terminarz/prace szkolne, uwagi/pochwały, wiadomości, osiągnięcia i zebrania.
 
 Helper nie jest wymagany dla każdego konta. mojV zawsze najpierw próbuje lekkiego logowania HTTP. Jeżeli konto wymaga pełnej przeglądarki, integracja automatycznie przełącza się na helper jako fallback; użytkownik nie wybiera backendu ręcznie.
 
-Każdy moduł danych jest pobierany niezależnie. Problem z ocenami lub terminarzem nie powinien blokować planu i frekwencji. Identyfikatory routingu, klucze sesji, cookies i tokeny pozostają wewnątrz helpera.
+Każdy moduł danych jest pobierany niezależnie. Problem z wiadomościami, ocenami lub statystykami nie blokuje planu i pozostałych modułów. Identyfikatory routingu, `globalKeySkrzynka`, klucze sesji, cookies i tokeny pozostają wewnątrz helpera. Wewnętrzne identyfikatory routingu wiadomości są zastępowane publicznym hashem przed zwróceniem danych do Home Assistant.
 
 Chromium działa z lokalnym wirtualnym ekranem Xvfb i klasycznym trybem headless. Helper zapisuje do logu wyłącznie bezpieczne etapy logowania i lokalizację strony bez parametrów zapytania.
 
@@ -24,7 +24,7 @@ Helper **nie zapisuje hasła**, nie eksportuje cookies ani kluczy sesji i nie wy
 ## Instalacja
 
 1. Dodaj `https://github.com/gekon27/mojv-auth-helper` jako repozytorium aplikacji Home Assistant.
-2. Zainstaluj lub zaktualizuj **mojV Auth Helper** do wersji **0.1.7** lub nowszej.
+2. Zainstaluj lub zaktualizuj **mojV Auth Helper** do wersji **0.1.8** lub nowszej.
 3. Uruchom aplikację i pozostaw `Uruchamiaj przy starcie` włączone.
 4. W HACS zainstaluj lub zaktualizuj integrację mojV z `https://github.com/gekon27/mojV`.
 5. Dodaj konto szkolne w integracji mojV. Integracja sama wybierze HTTP lub helper fallback.
@@ -35,4 +35,4 @@ Nie ma żadnych opcji do konfiguracji w samym helperze.
 
 - `/health` zwraca `status=ok` i wersję dokładnie uruchomionego obrazu.
 - log startowy ma postać `mojV Auth Helper version=<wersja>`.
-- logi nie powinny zawierać loginu, hasła, cookies, tokenów, kluczy sesji ani parametrów query.
+- logi nie powinny zawierać loginu, hasła, cookies, tokenów, kluczy sesji, mailbox keys ani parametrów query.

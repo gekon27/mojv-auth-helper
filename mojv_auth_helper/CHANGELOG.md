@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.8] - 2026-09-04
+
+- rozszerzono browser fallback do tego samego kontraktu LIVE co bezpośredni HTTP: uwagi/pochwały, wiadomości, osiągnięcia, zebrania oraz rozszerzone statystyki frekwencji,
+- dodano pobieranie `/api/Przedmioty` i `/api/FrekwencjaStatystyki` łącznie ze statystykami per przedmiot,
+- dodano `/api/Uwagi`, `/api/Osiagniecia` i `/api/Zebrania`,
+- dodano osobny tenant wiadomości z `/api/OdebraneSkrzynka` i `/api/WiadomoscSzczegoly`,
+- `globalKeySkrzynka`, klucze sesji i identyfikatory routingu wiadomości pozostają wyłącznie wewnątrz helpera; publiczne ID wiadomości jest hashowane,
+- zachowano izolację błędów per moduł, obsługę 1..N dzieci i dotychczasowy browser login flow.
+
 ## [0.1.7] - 2026-09-04
 
 - przeniesiono helper do dedykowanego repozytorium `gekon27/mojv-auth-helper`,
