@@ -60,8 +60,8 @@ def detail_endpoint(row: dict[str, Any]) -> str | None:
 
 
 def needs_detail(row: dict[str, Any]) -> bool:
-    """Avoid a detail request when the list response already carries content."""
-    return not str(row.get("opis") or row.get("tresc") or "").strip()
+    """Return whether a supported row must be enriched from its detail endpoint."""
+    return row.get("id") is not None and detail_endpoint(row) is not None
 
 
 def merge_schoolwork_detail(
