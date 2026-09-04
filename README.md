@@ -20,7 +20,7 @@ Then install **mojV Auth Helper** and keep automatic startup enabled. There are 
 
 The published image for this release is:
 
-- `ghcr.io/gekon27/mojv-auth-helper:0.1.10`
+- `ghcr.io/gekon27/mojv-auth-helper:0.1.11`
 
 Supported architectures:
 
@@ -38,7 +38,9 @@ The helper:
 - exposes `/health` with the exact running image version,
 - isolates modules so one failed endpoint does not block the remaining school data,
 - supports timetable, attendance and per-subject statistics, classification periods, grades, schoolwork, remarks, messages, achievements and meetings,
-- fetches the timetable from the previous week through the end of the fourth full future week, matching the Core HTTP path,
+- fetches the timetable as four weeks total: previous week, current week and two full future weeks, matching the Core HTTP path,
+- enriches homework and test list rows with safe detail text when the list response does not contain the assignment description,
+- keeps student answers, student-response attachments and technical routing/authentication fields out of the enriched public schoolwork payload,
 - additionally fetches days off, attendance excuses, teachers, public school information, the daily lucky number, important-today entries, homeroom teachers and completed lesson topics,
 - recursively strips authentication/routing fields from expanded public payloads,
 - replaces internal message routing identifiers with stable public hashes before returning message metadata.

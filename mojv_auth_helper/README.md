@@ -9,7 +9,9 @@ Najważniejsze właściwości:
 - automatyczny fallback — bez ręcznego wyboru backendu,
 - obsługa 1..N dzieci,
 - plan, frekwencja i statystyki per przedmiot, okresy klasyfikacyjne, oceny, terminarz/prace szkolne, uwagi/pochwały, wiadomości, osiągnięcia i zebrania,
-- plan obejmuje poprzedni tydzień, tydzień bieżący i 4 pełne tygodnie do przodu,
+- plan obejmuje 4 tygodnie łącznie: poprzedni, bieżący oraz 2 pełne tygodnie do przodu,
+- zadania domowe i sprawdziany są wzbogacane o bezpieczną treść szczegółową, gdy lista nie zawiera opisu,
+- odpowiedzi ucznia, pliki odpowiedzi oraz pola uwierzytelnienia/routingu nie są eksportowane w szczegółach terminarza,
 - dodatkowo: dni wolne, usprawiedliwienia, nauczyciele, publiczne informacje o szkole, szczęśliwy numerek, ważne dzisiaj, wychowawcy i zrealizowane tematy lekcji,
 - brak eksportu cookies, tokenów, kluczy sesji, mailbox keys i identyfikatorów routingu,
 - rekurencyjne filtrowanie rozszerzonych danych przed wysłaniem do Home Assistant,
@@ -20,7 +22,7 @@ Najważniejsze właściwości:
 - obrazy `amd64` i `aarch64` publikowane jako jeden manifest multi-arch,
 - `/health` raportuje dokładną wersję uruchomionego obrazu.
 
-Wersja aplikacji: **0.1.10**.
+Wersja aplikacji: **0.1.11**.
 
 Integracja HACS: https://github.com/gekon27/mojV
 

@@ -1,4 +1,4 @@
-"""Extended LIVE snapshot layer for mojV Auth Helper 0.1.9."""
+"""Extended LIVE snapshot layer for mojV Auth Helper."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -8,6 +8,12 @@ from typing import Any
 from urllib.parse import urlencode, urlparse
 
 import server as base
+from schoolwork_details import (
+    detail_endpoint,
+    merge_schoolwork_detail,
+    needs_detail,
+    schoolwork_rows,
+)
 
 _MESSAGES_HOST = "wiadomosci.eduvulcan.pl"
 
@@ -161,7 +167,7 @@ def _snapshot_browser(account: base.BrowserAccount) -> dict[str, Any]:
     now = datetime.now()
     week_start = now - timedelta(days=now.weekday())
     date_from = week_start - timedelta(weeks=1)
-    date_to = week_start + timedelta(weeks=5, days=-1)
+    date_to = week_start + timedelta(weeks=3, days=-1)
     schoolwork_from = now.replace(day=1) - timedelta(days=1)
     schoolwork_to = now + timedelta(days=61)
     excuses_from = now - timedelta(days=35)
@@ -284,6 +290,23 @@ def _snapshot_browser(account: base.BrowserAccount) -> dict[str, Any]:
             errors,
             "schoolwork",
         )
+        for row in schoolwork_rows(schoolwork):
+            endpoint = detail_endpoint(row)
+            work_id = row.get("id")
+            if not endpoint or work_id is None or not needs_detail(row):
+                continue
+            detail = _fetch_module(
+                account.driver,
+                target,
+                endpoint,
+                {**common, "id": work_id},
+                errors,
+                f"schoolwork_detail:{work_id}",
+            )
+            if detail is not None:
+                merged = merge_schoolwork_detail(row, detail)
+                row.clear()
+                row.update(merged)
 
         classification_periods: Any = None
         grades_by_period: dict[str, Any] = {}

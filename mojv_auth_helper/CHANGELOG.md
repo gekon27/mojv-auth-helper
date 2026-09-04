@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11] - 2026-09-04
+
+- plan browser fallback obejmuje teraz dokładnie 4 tygodnie łącznie: poprzedni, bieżący oraz dwa pełne tygodnie do przodu,
+- zadania domowe i sprawdziany są wzbogacane o bezpieczny opis z endpointu szczegółowego, gdy wpis listy nie zawiera treści,
+- szczegóły są scalane przez whitelistę pól przeznaczonych do wyświetlania; odpowiedzi ucznia, pliki odpowiedzi i pola routingu/uwierzytelnienia nie są eksportowane,
+- zachowano HTTP-first / Chromium-fallback parity, izolację błędów oraz obsługę 1..N dzieci.
+
 ## [0.1.10] - 2026-09-04
 
 - rozszerzono zakres planu lekcji w browser fallback do poprzedniego tygodnia, tygodnia bieżącego oraz czterech pełnych tygodni do przodu,
