@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10] - 2026-09-04
+
+- rozszerzono zakres planu lekcji w browser fallback do poprzedniego tygodnia, tygodnia bieżącego oraz czterech pełnych tygodni do przodu,
+- zakres dat planu jest zgodny z bezpośrednią ścieżką HTTP w mojV Core,
+- zachowano pojedynczy request planu na ucznia oraz dotychczasową izolację błędów i obsługę 1..N dzieci,
+- nie zmieniono granicy bezpieczeństwa: klucze sesji, cookies, tokeny i identyfikatory routingu pozostają wewnątrz helpera.
+
 ## [0.1.9] - 2026-09-04
 
 - rozszerzono browser fallback o dni wolne, usprawiedliwienia, nauczycieli, publiczne informacje o szkole, szczęśliwy numerek, wpisy „ważne dzisiaj”, wychowawców i zrealizowane tematy lekcji,

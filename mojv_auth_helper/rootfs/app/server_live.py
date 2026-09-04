@@ -159,8 +159,9 @@ def _fetch_messages(
 
 def _snapshot_browser(account: base.BrowserAccount) -> dict[str, Any]:
     now = datetime.now()
-    date_from = now - timedelta(days=now.weekday() + 7)
-    date_to = now + timedelta(days=21)
+    week_start = now - timedelta(days=now.weekday())
+    date_from = week_start - timedelta(weeks=1)
+    date_to = week_start + timedelta(weeks=5, days=-1)
     schoolwork_from = now.replace(day=1) - timedelta(days=1)
     schoolwork_to = now + timedelta(days=61)
     excuses_from = now - timedelta(days=35)
