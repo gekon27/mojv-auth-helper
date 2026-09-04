@@ -3,4 +3,4 @@ export DISPLAY="${DISPLAY:-:99}"
 echo "mojV Auth Helper version=${MOJV_HELPER_VERSION:-dev}"
 Xvfb "$DISPLAY" -screen 0 1366x900x24 -nolisten tcp >/tmp/mojv-xvfb.log 2>&1 &
 sleep 1
-exec python3 /app/server.py
+exec python3 /app/server_live.py

@@ -8,8 +8,9 @@ Najważniejsze właściwości:
 
 - automatyczny fallback — bez ręcznego wyboru backendu,
 - obsługa 1..N dzieci,
-- plan, frekwencja, okresy klasyfikacyjne, oceny oraz terminarz/prace szkolne,
-- brak eksportu cookies, tokenów, kluczy sesji i identyfikatorów routingu,
+- plan, frekwencja i statystyki per przedmiot, okresy klasyfikacyjne, oceny, terminarz/prace szkolne, uwagi/pochwały, wiadomości, osiągnięcia i zebrania,
+- brak eksportu cookies, tokenów, kluczy sesji, mailbox keys i identyfikatorów routingu,
+- identyfikatory wiadomości zwracane do Home Assistant są hashowane,
 - hasło nie jest zapisywane na dysku,
 - Chromium działa lokalnie w Xvfb,
 - obrazy `amd64` i `aarch64` publikowane jako jeden manifest multi-arch,

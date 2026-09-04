@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / "mojv_auth_helper" / "rootfs" / "app" / "auth_runtime.py"
 SERVER = ROOT / "mojv_auth_helper" / "rootfs" / "app" / "server.py"
+LIVE_SERVER = ROOT / "mojv_auth_helper" / "rootfs" / "app" / "server_live.py"
 DOCKERFILE = ROOT / "mojv_auth_helper" / "Dockerfile"
 RUN_SCRIPT = ROOT / "mojv_auth_helper" / "rootfs" / "etc" / "services.d" / "mojv-auth" / "run"
 
@@ -137,6 +138,7 @@ def test_browser_runs_inside_xvfb_with_classic_headless_mode() -> None:
     assert 'xvfb' in dockerfile
     assert 'Xvfb' in run_script
     assert 'DISPLAY=' in run_script
+    assert 'server_live.py' in run_script
 
 
 def test_helper_logs_safe_auth_stages_and_redacted_screenshot() -> None:
@@ -174,7 +176,7 @@ def test_diary_link_renderer_timeout_is_recovered_per_link() -> None:
 
 
 def test_helper_snapshot_fetches_extended_live_modules() -> None:
-    server = SERVER.read_text(encoding="utf-8")
+    server = SERVER.read_text(encoding="utf-8") + LIVE_SERVER.read_text(encoding="utf-8")
 
     for marker in (
         "zakresDanych",
@@ -190,3 +192,13 @@ def test_helper_snapshot_fetches_extended_live_modules() -> None:
         "WiadomoscSzczegoly",
     ):
         assert marker in server
+
+
+def test_message_routing_ids_are_sanitized_before_public_snapshot() -> None:
+    live = LIVE_SERVER.read_text(encoding="utf-8")
+
+    assert "_public_message_id" in live
+    assert "hashlib.sha256" in live
+    assert '"apiglobalkey"' in live.lower()
+    assert '"globalkeyskrzynka"' in live.lower()
+    assert "target.mailbox_key" in live

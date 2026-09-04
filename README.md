@@ -22,7 +22,7 @@ Then install **mojV Auth Helper** and keep automatic startup enabled. There are 
 
 The published image is:
 
-- `ghcr.io/gekon27/mojv-auth-helper:0.1.7`
+- `ghcr.io/gekon27/mojv-auth-helper:0.1.8`
 
 Supported architectures:
 
@@ -35,17 +35,18 @@ The helper:
 
 - runs Chromium with ChromeDriver inside a local Xvfb display,
 - discovers **1..N** students from the authenticated account; no fixed child count is assumed,
-- keeps routing identifiers, session keys, cookies and tokens inside the helper,
+- keeps routing identifiers, mailbox/session keys, cookies and tokens inside the helper,
 - returns only secret-free student data to mojV,
 - exposes `/health` with the exact running image version,
-- isolates timetable, attendance, classification periods, grades and schoolwork so one failed module does not block the others.
+- isolates timetable, attendance, attendance statistics, classification periods, grades, remarks, schoolwork, messages, achievements and meetings so one failed module does not block the others,
+- replaces internal message routing identifiers with stable public hashes before returning message metadata.
 
 The private HTTP service listens on port `8099` inside the Home Assistant app network. The app configuration does not expose that port to the LAN.
 
 ## Security boundary
 
 - Passwords are accepted only for the current helper request and are not persisted to disk.
-- Passwords, cookies, tokens and session/routing keys are never returned in public payloads.
+- Passwords, cookies, tokens, session keys, mailbox keys and routing identifiers are never returned in public payloads.
 - Logs contain only safe authentication stages, error classes and locations without query strings.
 - If browser authentication fails, `/data/mojv_auth_error.png` may be written locally; form input values are cleared before the screenshot.
 - The helper cache uses a SHA-256 credential-derived in-memory key and does not retain the password itself.

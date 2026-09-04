@@ -17,6 +17,7 @@ class StudentTarget:
     app_url: str
     session_key: str
     journal_id: str = ""
+    mailbox_key: str = ""
 
     def public_dict(self) -> dict[str, str]:
         """Return the secret-free student descriptor consumed by Home Assistant."""
@@ -76,6 +77,7 @@ def targets_from_context(
             continue
         class_name = str(row.get("oddzial") or row.get("klasa") or "").strip()
         journal_id = str(row.get("idDziennik") or "").strip()
+        mailbox_key = str(row.get("globalKeySkrzynka") or "").strip()
         raw_id = (
             row.get("idUczen")
             or row.get("idUcznia")
@@ -96,6 +98,7 @@ def targets_from_context(
                 app_url=app_url,
                 session_key=key,
                 journal_id=journal_id,
+                mailbox_key=mailbox_key,
             )
         )
     return tuple(targets)
@@ -106,9 +109,17 @@ def public_snapshot_row(
     *,
     timetable: Any,
     attendance: Any,
+    attendance_subjects: Any = None,
+    attendance_summary: Any = None,
+    attendance_by_subject: dict[str, Any] | None = None,
     classification_periods: Any = None,
     grades_by_period: dict[str, Any] | None = None,
+    remarks: Any = None,
     schoolwork: Any = None,
+    messages: Any = None,
+    message_details: dict[str, Any] | None = None,
+    achievements: Any = None,
+    meetings: Any = None,
     errors: dict[str, str],
 ) -> dict[str, Any]:
     """Build one helper response row without any authentication material."""
@@ -116,8 +127,16 @@ def public_snapshot_row(
         **target.public_dict(),
         "timetable": timetable,
         "attendance": attendance,
+        "attendance_subjects": attendance_subjects,
+        "attendance_summary": attendance_summary,
+        "attendance_by_subject": dict(attendance_by_subject or {}),
         "classification_periods": classification_periods,
         "grades_by_period": dict(grades_by_period or {}),
+        "remarks": remarks,
         "schoolwork": schoolwork,
+        "messages": messages,
+        "message_details": dict(message_details or {}),
+        "achievements": achievements,
+        "meetings": meetings,
         "errors": dict(errors),
     }

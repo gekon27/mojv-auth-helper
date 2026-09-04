@@ -6,7 +6,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "mojv_auth_helper"
-EXPECTED_VERSION = "0.1.7"
+EXPECTED_VERSION = "0.1.8"
 EXPECTED_REPO = "https://github.com/gekon27/mojv-auth-helper"
 EXPECTED_IMAGE = "ghcr.io/gekon27/mojv-auth-helper"
 
@@ -45,6 +45,7 @@ def test_container_contract_exposes_build_version_and_base_override() -> None:
     assert "MOJV_HELPER_VERSION" in run_script
     assert "MOJV_HELPER_VERSION" in server
     assert '"/health"' in server
+    assert "server_live.py" in run_script
 
 
 def test_docs_describe_installation_fallback_and_security_boundary() -> None:
@@ -58,9 +59,10 @@ def test_docs_describe_installation_fallback_and_security_boundary() -> None:
     assert "HTTP" in combined
     assert "fallback" in combined.lower()
     assert "1..N" in combined or "1…N" in combined
-    assert "password" in combined.lower()
+    assert "password" in combined.lower() or "hasła" in combined.lower()
     assert "cookie" in combined.lower()
     assert EXPECTED_VERSION in changelog
+    assert EXPECTED_VERSION in combined
 
 
 def test_publish_workflow_keeps_multiarch_and_anonymous_pull_gates() -> None:
