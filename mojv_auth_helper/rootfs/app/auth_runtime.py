@@ -5,6 +5,18 @@ from dataclasses import dataclass
 import hashlib
 from typing import Any
 
+_PUBLIC_FORBIDDEN_KEYS = {
+    "apiglobalkey",
+    "globalkeyskrzynka",
+    "mailbox_key",
+    "session_key",
+    "journal_id",
+    "cookie",
+    "cookies",
+    "token",
+    "password",
+}
+
 
 @dataclass(frozen=True, slots=True)
 class StudentTarget:
@@ -104,6 +116,21 @@ def targets_from_context(
     return tuple(targets)
 
 
+def sanitize_public_payload(value: Any) -> Any:
+    """Recursively strip known authentication and routing fields."""
+    if isinstance(value, dict):
+        return {
+            str(key): sanitize_public_payload(child)
+            for key, child in value.items()
+            if str(key).lower() not in _PUBLIC_FORBIDDEN_KEYS
+        }
+    if isinstance(value, list):
+        return [sanitize_public_payload(item) for item in value]
+    if isinstance(value, tuple):
+        return [sanitize_public_payload(item) for item in value]
+    return value
+
+
 def public_snapshot_row(
     target: StudentTarget,
     *,
@@ -120,10 +147,18 @@ def public_snapshot_row(
     message_details: dict[str, Any] | None = None,
     achievements: Any = None,
     meetings: Any = None,
+    lucky_number: Any = None,
+    free_days: Any = None,
+    excuses: Any = None,
+    teachers: Any = None,
+    school_info: Any = None,
+    important_today: Any = None,
+    homeroom_teachers: Any = None,
+    completed_lessons: Any = None,
     errors: dict[str, str],
 ) -> dict[str, Any]:
     """Build one helper response row without any authentication material."""
-    return {
+    public = {
         **target.public_dict(),
         "timetable": timetable,
         "attendance": attendance,
@@ -138,5 +173,14 @@ def public_snapshot_row(
         "message_details": dict(message_details or {}),
         "achievements": achievements,
         "meetings": meetings,
+        "lucky_number": lucky_number,
+        "free_days": free_days,
+        "excuses": excuses,
+        "teachers": teachers,
+        "school_info": school_info,
+        "important_today": important_today,
+        "homeroom_teachers": homeroom_teachers,
+        "completed_lessons": completed_lessons,
         "errors": dict(errors),
     }
+    return sanitize_public_payload(public)
