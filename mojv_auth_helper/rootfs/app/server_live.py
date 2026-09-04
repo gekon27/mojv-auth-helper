@@ -1,4 +1,4 @@
-"""Extended LIVE snapshot layer for mojV Auth Helper 0.1.8."""
+"""Extended LIVE snapshot layer for mojV Auth Helper 0.1.9."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -163,6 +163,12 @@ def _snapshot_browser(account: base.BrowserAccount) -> dict[str, Any]:
     date_to = now + timedelta(days=21)
     schoolwork_from = now.replace(day=1) - timedelta(days=1)
     schoolwork_to = now + timedelta(days=61)
+    excuses_from = now - timedelta(days=35)
+    excuses_to = now + timedelta(days=7)
+    completed_from = now - timedelta(days=35)
+    completed_to = now
+    free_days_from = now - timedelta(days=30)
+    free_days_to = now + timedelta(days=365)
     students: list[dict[str, Any]] = []
 
     for target in account.targets:
@@ -217,6 +223,54 @@ def _snapshot_browser(account: base.BrowserAccount) -> dict[str, Any]:
         remarks = _fetch_module(account.driver, target, "Uwagi", common, errors, "remarks")
         achievements = _fetch_module(account.driver, target, "Osiagniecia", common, errors, "achievements")
         meetings = _fetch_module(account.driver, target, "Zebrania", common, errors, "meetings")
+        lucky_number = _fetch_module(
+            account.driver, target, "SzczesliwyNumerTablica", common, errors, "lucky_number"
+        )
+        free_days = _fetch_module(
+            account.driver,
+            target,
+            "DniWolne",
+            {
+                **common,
+                "dataOd": base._date_stamp(free_days_from, start=True),
+                "dataDo": base._date_stamp(free_days_to, start=False),
+            },
+            errors,
+            "free_days",
+        )
+        excuses = _fetch_module(
+            account.driver,
+            target,
+            "Usprawiedliwienia",
+            {
+                **common,
+                "dataOd": base._date_stamp(excuses_from, start=True),
+                "dataDo": base._date_stamp(excuses_to, start=False),
+            },
+            errors,
+            "excuses",
+        )
+        teachers = _fetch_module(account.driver, target, "Nauczyciele", common, errors, "teachers")
+        school_info = _fetch_module(account.driver, target, "Informacje", common, errors, "school_info")
+        important_today = _fetch_module(
+            account.driver, target, "WazneDzisiajTablica", common, errors, "important_today"
+        )
+        homeroom_teachers = _fetch_module(
+            account.driver, target, "WychowawcyTablica", common, errors, "homeroom_teachers"
+        )
+        completed_lessons = _fetch_module(
+            account.driver,
+            target,
+            "RealizacjaZajec",
+            {
+                **common,
+                "status": 1,
+                "dataOd": base._date_stamp(completed_from, start=True),
+                "dataDo": base._date_stamp(completed_to, start=False),
+            },
+            errors,
+            "completed_lessons",
+        )
         schoolwork = _fetch_module(
             account.driver,
             target,
@@ -279,6 +333,14 @@ def _snapshot_browser(account: base.BrowserAccount) -> dict[str, Any]:
                 message_details=message_details,
                 achievements=achievements,
                 meetings=meetings,
+                lucky_number=lucky_number,
+                free_days=free_days,
+                excuses=excuses,
+                teachers=teachers,
+                school_info=school_info,
+                important_today=important_today,
+                homeroom_teachers=homeroom_teachers,
+                completed_lessons=completed_lessons,
                 errors=errors,
             )
         )

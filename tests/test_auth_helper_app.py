@@ -88,6 +88,14 @@ def test_snapshot_student_never_contains_browser_or_session_secrets() -> None:
         message_details={},
         achievements=[],
         meetings=[],
+        lucky_number={"numer": 20},
+        free_days=[],
+        excuses={"usprawiedliwieniaAktywne": True, "usprawiedliwienia": []},
+        teachers={"nauczyciele": []},
+        school_info={"nazwa": "Szkoła"},
+        important_today=[],
+        homeroom_teachers=[],
+        completed_lessons=[],
         errors={},
     )
     assert set(row) == {
@@ -107,6 +115,14 @@ def test_snapshot_student_never_contains_browser_or_session_secrets() -> None:
         "message_details",
         "achievements",
         "meetings",
+        "lucky_number",
+        "free_days",
+        "excuses",
+        "teachers",
+        "school_info",
+        "important_today",
+        "homeroom_teachers",
+        "completed_lessons",
         "errors",
     }
     public = str(row)
@@ -114,6 +130,8 @@ def test_snapshot_student_never_contains_browser_or_session_secrets() -> None:
     assert "'journal_id'" not in public
     assert "'session_key'" not in public
     assert "'mailbox_key'" not in public
+    assert "'globalKeySkrzynka'" not in public
+    assert "'apiGlobalKey'" not in public
 
 
 def test_browser_cache_key_is_bound_to_both_username_and_password() -> None:
@@ -190,6 +208,14 @@ def test_helper_snapshot_fetches_extended_live_modules() -> None:
         "Zebrania",
         "OdebraneSkrzynka",
         "WiadomoscSzczegoly",
+        "DniWolne",
+        "Usprawiedliwienia",
+        "Nauczyciele",
+        "Informacje",
+        "SzczesliwyNumerTablica",
+        "WazneDzisiajTablica",
+        "WychowawcyTablica",
+        "RealizacjaZajec",
     ):
         assert marker in server
 

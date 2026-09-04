@@ -6,7 +6,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "mojv_auth_helper"
-EXPECTED_VERSION = "0.1.8"
+EXPECTED_VERSION = "0.1.9"
 EXPECTED_REPO = "https://github.com/gekon27/mojv-auth-helper"
 EXPECTED_IMAGE = "ghcr.io/gekon27/mojv-auth-helper"
 

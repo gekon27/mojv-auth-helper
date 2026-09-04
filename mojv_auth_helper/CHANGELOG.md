@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.9] - 2026-09-04
+
+- rozszerzono browser fallback o dni wolne, usprawiedliwienia, nauczycieli, publiczne informacje o szkole, szczęśliwy numerek, wpisy „ważne dzisiaj”, wychowawców i zrealizowane tematy lekcji,
+- zachowano niezależne pobieranie modułów i obsługę 1..N dzieci,
+- dodano rekurencyjne filtrowanie rozszerzonych payloadów przed ich zwróceniem do Home Assistant,
+- pola uwierzytelnienia, mailbox/session keys i identyfikatory routingu pozostają wyłącznie wewnątrz helpera,
+- wrażliwy profil ucznia i zdjęcie ucznia nie są eksportowane,
+- zachowano dotychczasowe hashowanie publicznych identyfikatorów wiadomości oraz HTTP-first / Chromium-fallback contract.
+
 ## [0.1.8] - 2026-09-04
 
 - rozszerzono browser fallback do tego samego kontraktu LIVE co bezpośredni HTTP: uwagi/pochwały, wiadomości, osiągnięcia, zebrania oraz rozszerzone statystyki frekwencji,
