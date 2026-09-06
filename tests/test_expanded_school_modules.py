@@ -88,3 +88,14 @@ def test_helper_source_does_not_export_sensitive_student_profile() -> None:
     source = (APP / "server_live.py").read_text(encoding="utf-8").lower()
     assert "daneucznia" not in source
     assert "uczenzdjecie" not in source
+
+
+def test_confirmed_reply_stays_inside_the_helper_and_uses_browser_ui() -> None:
+    server = (APP / "server.py").read_text(encoding="utf-8")
+    live = (APP / "server_live.py").read_text(encoding="utf-8")
+    assert 'app.router.add_post("/v1/actions/reply", send_reply)' in server
+    assert 'payload.get("confirmed") is not True' in server
+    assert "message_routes" in server
+    assert "contenteditable='true'" in live
+    assert '_visible_button(account.driver, "Wyślij").click()' in live
+    assert "base._send_reply = _send_reply" in live

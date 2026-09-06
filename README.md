@@ -20,7 +20,7 @@ Then install **mojV Auth Helper** and keep automatic startup enabled. There are 
 
 The published image for this release is:
 
-- `ghcr.io/gekon27/mojv-auth-helper:0.1.11`
+- `ghcr.io/gekon27/mojv-auth-helper:0.2.0`
 
 Supported architectures:
 
@@ -44,6 +44,7 @@ The helper:
 - additionally fetches days off, attendance excuses, teachers, public school information, the daily lucky number, important-today entries, homeroom teachers and completed lesson topics,
 - recursively strips authentication/routing fields from expanded public payloads,
 - replaces internal message routing identifiers with stable public hashes before returning message metadata.
+- can send one reply only after mojV provides an explicit confirmation; the text and routing remain in the helper process.
 
 The private HTTP service listens on port `8099` inside the Home Assistant app network. The app configuration does not expose that port to the LAN.
 

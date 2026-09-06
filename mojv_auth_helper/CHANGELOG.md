@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.0] - 2026-09-06
+
+- dodano prywatną akcję odpowiedzi na wiadomość: wymaga potwierdzenia przekazanego przez mojV, korzysta z UI portalu w Chromium i nie zapisuje/nie eksportuje treści ani routingu,
+- routing wiadomości dla odpowiedzi pozostaje wyłącznie w pamięci procesu; publiczny snapshot nadal zawiera wyłącznie zahashowane identyfikatory.
+
 ## [0.1.11] - 2026-09-04
 
 - plan browser fallback obejmuje teraz dokładnie 4 tygodnie łącznie: poprzedni, bieżący oraz dwa pełne tygodnie do przodu,

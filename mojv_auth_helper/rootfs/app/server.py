@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import json
 import logging
@@ -77,6 +77,9 @@ class BrowserAccount:
     driver: webdriver.Chrome
     targets: tuple[StudentTarget, ...]
     authenticated_at: datetime
+    # Private, in-memory route metadata is needed only when the account owner
+    # explicitly confirms a reply. It is never returned in a snapshot.
+    message_routes: dict[str, dict[str, str]] = field(default_factory=dict)
 
     def is_fresh(self) -> bool:
         return datetime.now() - self.authenticated_at < _CACHE_MAX_AGE
@@ -667,6 +670,48 @@ async def snapshot(request: web.Request) -> web.Response:
         return _error_response(err)
 
 
+def _action_payload(payload: Any) -> tuple[str, str, str, str, str]:
+    """Validate a deliberate message reply without logging its contents."""
+    if not isinstance(payload, dict):
+        raise web.HTTPBadRequest(text='{"error":"invalid_json"}', content_type="application/json")
+    username = str(payload.get("username") or "").strip()
+    password = str(payload.get("password") or "")
+    student_id = str(payload.get("student_id") or "").strip()
+    message_id = str(payload.get("message_id") or "").strip()
+    body = str(payload.get("body") or "").strip()
+    if not username or not password or not student_id or not message_id or not body:
+        raise web.HTTPBadRequest(text='{"error":"invalid_action"}', content_type="application/json")
+    if len(body) > 4000 or payload.get("confirmed") is not True:
+        raise web.HTTPBadRequest(text='{"error":"confirmation_required"}', content_type="application/json")
+    return username, password, student_id, message_id, body
+
+
+def _send_reply(
+    account: BrowserAccount,
+    student_id: str,
+    message_id: str,
+    body: str,
+) -> None:
+    """Fallback hook replaced by server_live's browser-only implementation."""
+    raise BrowserAuthError("Reply actions require the LIVE runtime")
+
+
+async def send_reply(request: web.Request) -> web.Response:
+    """Send one reply only after Home Assistant supplied explicit confirmation."""
+    try:
+        try:
+            payload = await request.json()
+        except (json.JSONDecodeError, ValueError) as err:
+            raise web.HTTPBadRequest(text='{"error":"invalid_json"}', content_type="application/json") from err
+        username, password, student_id, message_id, body = _action_payload(payload)
+        browser_account = await _get_account(username, password)
+        async with _BROWSER_LOCK:
+            await asyncio.to_thread(_send_reply, browser_account, student_id, message_id, body)
+        return web.json_response({"status": "sent"})
+    except BrowserAuthError as err:
+        return _error_response(err)
+
+
 async def cleanup(_: web.Application) -> None:
     async with _BROWSER_LOCK:
         for browser_account in tuple(_ACCOUNTS.values()):
@@ -680,6 +725,7 @@ def create_app() -> web.Application:
     app.router.add_get("/health", health)
     app.router.add_post("/v1/account", account)
     app.router.add_post("/v1/snapshot", snapshot)
+    app.router.add_post("/v1/actions/reply", send_reply)
     app.on_cleanup.append(cleanup)
     return app
 

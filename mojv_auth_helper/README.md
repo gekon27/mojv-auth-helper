@@ -22,7 +22,7 @@ Najważniejsze właściwości:
 - obrazy `amd64` i `aarch64` publikowane jako jeden manifest multi-arch,
 - `/health` raportuje dokładną wersję uruchomionego obrazu.
 
-Wersja aplikacji: **0.1.11**.
+Wersja aplikacji: **0.2.0**.
 
 Integracja HACS: https://github.com/gekon27/mojV
 

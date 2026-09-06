@@ -113,9 +113,9 @@ def _fetch_messages(
     driver: Any,
     target: Any,
     errors: dict[str, str],
-) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, dict[str, str]]]:
     if not target.mailbox_key:
-        return [], {}
+        return [], {}, {}
     try:
         _open_messages_app(driver, target.city)
         inbox_payload = base._browser_json(
@@ -132,6 +132,7 @@ def _fetch_messages(
         )
         inbox: list[dict[str, Any]] = []
         details: dict[str, Any] = {}
+        routes: dict[str, dict[str, str]] = {}
         for raw in _records(inbox_payload):
             routing_key = str(raw.get("apiGlobalKey") or "").strip()
             public_id = _public_message_id(routing_key) if routing_key else str(raw.get("id") or "")
@@ -143,6 +144,13 @@ def _fetch_messages(
             if public_id:
                 row["id"] = public_id
             inbox.append(row)
+            if public_id and routing_key:
+                routes[public_id] = {
+                    "student_id": target.student_id,
+                    "city": target.city,
+                    "sender": str(raw.get("nadawca") or raw.get("nadawcaNazwa") or "").strip(),
+                    "subject": str(raw.get("temat") or raw.get("tytul") or "").strip(),
+                }
             if not routing_key or not public_id:
                 continue
             try:
@@ -157,10 +165,78 @@ def _fetch_messages(
                 details[public_id] = _sanitize_detail(detail)
             except base.BrowserAuthError as err:
                 errors[f"message_detail:{public_id}"] = base._module_error(err)
-        return inbox, details
+        return inbox, details, routes
     except base.BrowserAuthError as err:
         errors["messages"] = base._module_error(err)
-        return [], {}
+        return [], {}, {}
+
+
+def _visible_button(driver: Any, label: str) -> Any:
+    """Return the uniquely visible portal button with this accessible label."""
+    buttons = [
+        item
+        for item in driver.find_elements(base.By.XPATH, f"//button[normalize-space()={label!r}]")
+        if item.is_displayed() and item.is_enabled()
+    ]
+    if not buttons:
+        raise base.BrowserAuthError(f"Message action {label!r} is unavailable")
+    return buttons[-1]
+
+
+def _message_detail_button(driver: Any, route: dict[str, str]) -> Any:
+    """Find one inbox row using safe display fields held only in process memory."""
+    subject = route.get("subject", "")
+    sender = route.get("sender", "")
+    if not subject:
+        raise base.BrowserAuthError("Message route has no subject")
+    candidates: list[Any] = []
+    for button in driver.find_elements(base.By.XPATH, "//button[contains(@aria-label, 'Przejdź do szczegółów')]"):
+        if not button.is_displayed():
+            continue
+        text = str(driver.execute_script("""
+            let node = arguments[0];
+            for (let i = 0; node && i < 6; i += 1, node = node.parentElement) {
+              if (node.innerText && node.innerText.length > 8) return node.innerText;
+            }
+            return '';
+        """, button) or "")
+        if subject in text and (not sender or sender in text):
+            candidates.append(button)
+    if len(candidates) != 1:
+        raise base.BrowserAuthError("Message route is ambiguous or no longer available")
+    return candidates[0]
+
+
+def _send_reply(
+    account: base.BrowserAccount,
+    student_id: str,
+    message_id: str,
+    body: str,
+) -> None:
+    """Use the real portal UI only after HA has explicitly confirmed sending."""
+    route = account.message_routes.get(message_id)
+    if not route or route.get("student_id") != student_id:
+        raise base.BrowserAuthError("Message route is unavailable; refresh the inbox first")
+    _open_messages_app(account.driver, route["city"])
+    try:
+        account.driver.get(f"https://{_MESSAGES_HOST}/{route['city']}/App/odebrane")
+        base.WebDriverWait(account.driver, 12).until(
+            lambda current: bool(current.find_elements(base.By.XPATH, "//button[contains(@aria-label, 'Przejdź do szczegółów')]"))
+        )
+        _message_detail_button(account.driver, route).click()
+        base.WebDriverWait(account.driver, 8).until(lambda current: _visible_button(current, "Odpowiedz"))
+        _visible_button(account.driver, "Odpowiedz").click()
+        editor = base.WebDriverWait(account.driver, 8).until(
+            lambda current: next(
+                (item for item in current.find_elements(base.By.CSS_SELECTOR, "[contenteditable='true']") if item.is_displayed()),
+                None,
+            )
+        )
+        account.driver.execute_script("arguments[0].innerHTML = ''; arguments[0].focus();", editor)
+        editor.send_keys(body)
+        _visible_button(account.driver, "Wyślij").click()
+    except (base.TimeoutException, base.WebDriverException) as err:
+        raise base.BrowserAuthError("Message reply could not be completed") from err
 
 
 def _snapshot_browser(account: base.BrowserAccount) -> dict[str, Any]:
@@ -335,7 +411,8 @@ def _snapshot_browser(account: base.BrowserAccount) -> dict[str, Any]:
                 if result is not None:
                     grades_by_period[period_id] = result
 
-        messages, message_details = _fetch_messages(account.driver, target, errors)
+        messages, message_details, message_routes = _fetch_messages(account.driver, target, errors)
+        account.message_routes.update(message_routes)
         try:
             base._open_diary_link(account.driver, target.app_url, index=1, total=1)
         except base.BrowserAuthError as err:
@@ -373,6 +450,7 @@ def _snapshot_browser(account: base.BrowserAccount) -> dict[str, Any]:
 
 
 base._snapshot_browser = _snapshot_browser
+base._send_reply = _send_reply
 
 
 if __name__ == "__main__":
