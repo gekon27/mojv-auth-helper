@@ -28,7 +28,7 @@ Helper **nie zapisuje hasła**, nie eksportuje cookies ani kluczy sesji i nie wy
 ## Instalacja
 
 1. Dodaj `https://github.com/gekon27/mojv-auth-helper` jako repozytorium aplikacji Home Assistant.
-2. Zainstaluj lub zaktualizuj **mojV Auth Helper** do wersji **0.2.0** lub nowszej.
+2. Zainstaluj lub zaktualizuj **mojV Auth Helper** do wersji **0.2.1** lub nowszej.
 3. Uruchom aplikację i pozostaw `Uruchamiaj przy starcie` włączone.
 4. W HACS zainstaluj lub zaktualizuj integrację mojV z `https://github.com/gekon27/mojV`.
 5. Dodaj konto szkolne w integracji mojV. Integracja sama wybierze HTTP lub helper fallback.

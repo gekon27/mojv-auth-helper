@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.1] - 2026-09-14
+
+- naprawiono logowanie po zmianie portalu eduVULCAN: helper otwiera teraz stronę wyboru profilu i używa tylko konkretnych linków profili uczniów,
+- ogólny link „Dostęp do Dziennika” oraz strefa maturzysty nie są już błędnie traktowane jak profile uczniów,
+- zachowano obsługę wielu dzieci, izolację błędów per profil oraz granicę bezpieczeństwa danych sesji.
+
 ## [0.2.0] - 2026-09-06
 
 - dodano prywatną akcję odpowiedzi na wiadomość: wymaga potwierdzenia przekazanego przez mojV, korzysta z UI portalu w Chromium i nie zapisuje/nie eksportuje treści ani routingu,

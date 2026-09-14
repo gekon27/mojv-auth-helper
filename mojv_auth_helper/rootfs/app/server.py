@@ -208,12 +208,47 @@ def _diary_links(driver: webdriver.Chrome) -> list[str]:
     return result
 
 
-def _wait_for_diary_links(driver: webdriver.Chrome) -> list[str]:
+def _is_profile_diary_link(url: str) -> bool:
+    """Return whether a URL opens one concrete student profile."""
+
+    parsed = urlparse(url)
+    portal_host = urlparse(_PORTAL_ROOT).netloc.lower()
+    return (
+        parsed.scheme in {"http", "https"}
+        and parsed.netloc.lower() == portal_host
+        and parsed.path.rstrip("/") == "/dziennik"
+        and bool(parsed.query)
+    )
+
+
+def _profile_diary_links(driver: webdriver.Chrome) -> list[str]:
+    return [link for link in _diary_links(driver) if _is_profile_diary_link(link)]
+
+
+def _wait_for_profile_diary_links(driver: webdriver.Chrome) -> list[str]:
+    """Open the profile chooser and return only concrete student links."""
+
     try:
-        links = WebDriverWait(driver, _BROWSER_TIMEOUT).until(
+        profiles = _profile_diary_links(driver)
+        if profiles:
+            return profiles
+
+        chooser_links = WebDriverWait(driver, _BROWSER_TIMEOUT).until(
             lambda current: _diary_links(current) or False
         )
-        return list(links)
+        chooser = next(
+            (link for link in chooser_links if "dostep-do-dziennika" in link.lower()),
+            None,
+        )
+        if not chooser:
+            raise NoStudents("Diary profile chooser was not found after login")
+        driver.get(chooser)
+        _log_stage(driver, "profile-chooser")
+        return list(
+            WebDriverWait(driver, _BROWSER_TIMEOUT).until(
+                lambda current: _profile_diary_links(current) or False
+            )
+        )
     except TimeoutException as err:
         lower = _page_lower(driver)
         if any(marker in lower for marker in _INVALID_AUTH_MARKERS):
@@ -222,7 +257,7 @@ def _wait_for_diary_links(driver: webdriver.Chrome) -> list[str]:
             raise BrowserVerificationFailed(
                 "Browser verification did not complete"
             ) from err
-        raise NoStudents("No diary links were found after login") from err
+        raise NoStudents("No student profile links were found after login") from err
 
 
 def _wait_for_student_tenant(
@@ -359,8 +394,8 @@ def _login_browser(username: str, password: str) -> BrowserAccount:
         password_input.send_keys(Keys.ENTER)
         _log_stage(driver, "password-submitted")
 
-        links = _wait_for_diary_links(driver)
-        _LOGGER.info("Auth stage=diary-links count=%d", len(links))
+        links = _wait_for_profile_diary_links(driver)
+        _LOGGER.info("Auth stage=profile-links count=%d", len(links))
         targets: list[StudentTarget] = []
         seen: set[tuple[str, str, str]] = set()
         link_failures: list[BrowserAuthError] = []

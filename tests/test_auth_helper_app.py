@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import ast
 import importlib.util
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / "mojv_auth_helper" / "rootfs" / "app" / "auth_runtime.py"
@@ -20,6 +22,21 @@ def _load():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _load_server_function(name: str):
+    """Execute one dependency-free server helper without importing Selenium."""
+
+    tree = ast.parse(SERVER.read_text(encoding="utf-8"))
+    function = next(
+        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name
+    )
+    namespace = {
+        "urlparse": urlparse,
+        "_PORTAL_ROOT": "https://eduvulcan.pl",
+    }
+    exec(compile(ast.Module(body=[function], type_ignores=[]), str(SERVER), "exec"), namespace)
+    return namespace[name]
 
 
 def test_unwrap_context_accepts_nested_data_and_result() -> None:
@@ -166,7 +183,7 @@ def test_helper_logs_safe_auth_stages_and_redacted_screenshot() -> None:
         "login-page",
         "username-submitted",
         "password-submitted",
-        "diary-links",
+        "profile-links",
         "student-app",
         "context",
     ):
@@ -191,6 +208,24 @@ def test_diary_link_renderer_timeout_is_recovered_per_link() -> None:
     assert "window.stop()" in server
     assert "for index, link in enumerate(links, start=1)" in server
     assert "link_failures" in server
+
+
+def test_profile_diary_link_filter_excludes_generic_and_matura_routes() -> None:
+    is_profile_link = _load_server_function("_is_profile_diary_link")
+
+    assert is_profile_link("https://eduvulcan.pl/dziennik?opaque-profile-route")
+    assert not is_profile_link("https://eduvulcan.pl/dostep-do-dziennika/")
+    assert not is_profile_link("https://dziennik.vulcan.edu.pl/matura/")
+    assert not is_profile_link("https://eduvulcan.pl/dziennik")
+
+
+def test_browser_auth_opens_profile_chooser_before_student_links() -> None:
+    server = SERVER.read_text(encoding="utf-8")
+
+    assert "def _wait_for_profile_diary_links" in server
+    assert '"dostep-do-dziennika"' in server
+    assert '"profile-chooser"' in server
+    assert "Auth stage=profile-links" in server
 
 
 def test_helper_snapshot_fetches_extended_live_modules() -> None:

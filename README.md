@@ -20,7 +20,7 @@ Then install **mojV Auth Helper** and keep automatic startup enabled. There are 
 
 The published image for this release is:
 
-- `ghcr.io/gekon27/mojv-auth-helper:0.2.0`
+- `ghcr.io/gekon27/mojv-auth-helper:0.2.1`
 
 Supported architectures:
 
